@@ -1,0 +1,53 @@
+services:
+  go-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=3333
+      - ENVIRONMENT=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=99831
+      - DB_NAME=vehicle_vision
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+    networks:
+      - vehicle-vision-network
+
+  python-service:
+    build:
+      context: ./vehicle-vision-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:3333"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./vehicle-vision-service/temp:/app/temp
+    networks:
+      - vehicle-vision-network
+
+  postgres:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=99831
+      - POSTGRES_DB=vehicle_vision
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - vehicle-vision-network
+
+networks:
+  vehicle-vision-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
